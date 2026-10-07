@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 848409ee8ba454f42a5ddff137688a27, type: 3}
+  m_Name: M1_ReferenceImages
+  m_EditorClassIdentifier: Unity.XR.ARSubsystems::UnityEngine.XR.ARSubsystems.XRReferenceImageLibrary
+  m_GuidLow: 4905317574600865868
+  m_GuidHigh: 3278241856111569028
+  m_DataStore:
+    m_Storage: []
+  m_Images:
+  - m_SerializedGuid:
+      m_GuidLow: 4913772104780076144
+      m_GuidHigh: 18424442670365127576
+    m_SerializedTextureGuid:
+      m_GuidLow: 17646279025248965253
+      m_GuidHigh: 7673543512615562090
+    m_Size: {x: 2, y: 1.4}
+    m_SpecifySize: 1
+    m_Name: M1
+    m_Texture: {fileID: 2800000, guid: 8b6412852d47f4e46a2bf4252be77d6a, type: 3}
