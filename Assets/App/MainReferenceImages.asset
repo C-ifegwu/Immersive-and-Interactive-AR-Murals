@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 848409ee8ba454f42a5ddff137688a27, type: 3}
+  m_Name: MainReferenceImages
+  m_EditorClassIdentifier: Unity.XR.ARSubsystems::UnityEngine.XR.ARSubsystems.XRReferenceImageLibrary
+  m_GuidLow: 5607297819369922534
+  m_GuidHigh: 16494130864898454159
+  m_DataStore:
+    m_Storage: []
+  m_Images:
+  - m_SerializedGuid:
+      m_GuidLow: 4927912528451965672
+      m_GuidHigh: 11971070569034933120
+    m_SerializedTextureGuid:
+      m_GuidLow: 4730036519480800854
+      m_GuidHigh: 6943495397614227162
+    m_Size: {x: 2, y: 2}
+    m_SpecifySize: 1
+    m_Name: M1
+    m_Texture: {fileID: 2800000, guid: 56473656772741a4da0e5ba246405c60, type: 3}
+  - m_SerializedGuid:
+      m_GuidLow: 5292437775121174883
+      m_GuidHigh: 17884748750296530079
+    m_SerializedTextureGuid:
+      m_GuidLow: 2100025377260572843
+      m_GuidHigh: 13140935261516460410
+    m_Size: {x: 3, y: 3}
+    m_SpecifySize: 1
+    m_Name: M2
+    m_Texture: {fileID: 2800000, guid: 46ec10abc9f41d247af11727fffa5db6, type: 3}
+  - m_SerializedGuid:
+      m_GuidLow: 5647114982712096589
+      m_GuidHigh: 18342406705290364038
+    m_SerializedTextureGuid:
+      m_GuidLow: 8449993182754223920
+      m_GuidHigh: 11219923229266254985
+    m_Size: {x: 3, y: 3}
+    m_SpecifySize: 1
+    m_Name: M3
+    m_Texture: {fileID: 2800000, guid: 9c89b73068077544899c9137bb2cb59b, type: 3}
+  - m_SerializedGuid:
+      m_GuidLow: 4629685086459335873
+      m_GuidHigh: 15757306782844762244
+    m_SerializedTextureGuid:
+      m_GuidLow: 2379042828606158762
+      m_GuidHigh: 6488346662385824378
+    m_Size: {x: 3, y: 3}
+    m_SpecifySize: 1
+    m_Name: M4
+    m_Texture: {fileID: 2800000, guid: 1082b7aa0ed921047a3219a7e93c0b5a, type: 3}
