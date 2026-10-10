@@ -27,6 +27,8 @@ namespace ARMurals
             public Vector2 mapPosition = new Vector2(0.5f, 0.5f);
             [Tooltip("Photo shown on the card and as the scanning hint. Defaults to the mural's target image.")]
             public Texture2D photo;
+            [Tooltip("Real width of the painted wall in metres. Used for detection when the mural has no experience prefab yet.")]
+            [Min(0.1f)] public float widthMeters = 3f;
         }
 
         [Tooltip("The combined map, shown on the ALL tab and for any level without its own map.")]

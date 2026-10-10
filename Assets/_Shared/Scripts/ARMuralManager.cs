@@ -28,12 +28,17 @@ namespace ARMurals
 
         ARTrackedImageManager imageManager;
 
+        /// <summary>Raised with the slot name whenever any mural in the library is recognised,
+        /// including murals that have no experience built yet.</summary>
+        public event System.Action<string> MuralDetected;
+
         readonly Dictionary<string, MuralExperienceBase> bySlot =
             new Dictionary<string, MuralExperienceBase>(System.StringComparer.OrdinalIgnoreCase);
         readonly Dictionary<TrackableId, MuralExperienceBase> bound =
             new Dictionary<TrackableId, MuralExperienceBase>();
         readonly Dictionary<TrackableId, float> limitedSince =
             new Dictionary<TrackableId, float>();
+        readonly HashSet<TrackableId> unbuilt = new HashSet<TrackableId>();
 
         void Awake()
         {
@@ -110,7 +115,13 @@ namespace ARMurals
             var slot = SlotFor(image);
             if (slot == null)
             {
-                Debug.LogWarning($"[ARMuralManager] No experience registered for reference image '{image.referenceImage.name}'.");
+                // Detected, but nobody has built its experience yet: still count it as found.
+                if (image.trackingState == TrackingState.Tracking && unbuilt.Add(image.trackableId))
+                {
+                    Debug.Log($"[ARMuralManager] Detected '{image.referenceImage.name}' (no experience yet).");
+                    MuralDetected?.Invoke(image.referenceImage.name);
+                    if (ui != null) ui.SetInfoText("Mural " + image.referenceImage.name + " recognised. Its animation is coming soon.");
+                }
                 return;
             }
 
@@ -139,6 +150,7 @@ namespace ARMurals
                 if (!exp.IsActive)
                 {
                     exp.OnTrackingFound();
+                    MuralDetected?.Invoke(exp.MuralSlot);
                     if (ui != null) ui.ShowExperience();
                 }
                 return;
