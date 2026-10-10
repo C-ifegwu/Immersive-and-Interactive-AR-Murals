@@ -19,6 +19,12 @@ namespace ARMurals
         [SerializeField] UIShellController shell;
         [SerializeField] MuralDirectory directory;
         [SerializeField] List<MuralExperienceBase> experiences = new List<MuralExperienceBase>();
+        [SerializeField] ARMuralManager manager;
+
+        [Header("Splash (first screen on launch)")]
+        [SerializeField] GameObject splash;
+        [SerializeField] Button splashStartButton;
+        [SerializeField] Text splashFacts;
 
         [Header("Map")]
         [SerializeField] RawImage mapImage;
@@ -51,7 +57,7 @@ namespace ARMurals
         [SerializeField] Color pinSelected = new Color(0.90f, 0.47f, 0.10f, 1f);   // deeper orange, visible on the white map
         [SerializeField] Color pinFound = new Color(0.40f, 0.82f, 0.55f, 1f);
         [SerializeField] Color tabOn = new Color(0.988f, 0.737f, 0.251f, 1f);
-        [SerializeField] Color tabOff = new Color(1f, 1f, 1f, 0.10f);
+        [SerializeField] Color tabOff = new Color(1f, 1f, 1f, 0f);
         [SerializeField] Color tabTextOn = new Color(0.063f, 0.071f, 0.110f, 1f);
         [SerializeField] Color tabTextOff = new Color(0.949f, 0.945f, 0.925f, 1f);
 
@@ -75,6 +81,12 @@ namespace ARMurals
             if (cardScanButton != null) cardScanButton.onClick.AddListener(() => BeginScan(selected));
             if (cardCloseButton != null) cardCloseButton.onClick.AddListener(() => Select(null));
             if (backToMapButton != null) backToMapButton.onClick.AddListener(BackToMap);
+            if (manager != null) manager.MuralDetected += MarkFound;
+
+            if (splash != null) splash.SetActive(true);
+            if (splashStartButton != null) splashStartButton.onClick.AddListener(() => splash.SetActive(false));
+            if (splashFacts != null)
+                splashFacts.text = directory.murals.Count + " murals  ·  " + directory.levelCount + " levels  ·  about 15 minutes";
 
             ShowLevel(0);
             if (shell != null) lastState = shell.State;
@@ -94,6 +106,18 @@ namespace ARMurals
                 if (shell.State == UIShellController.ShellState.Start) Select(null);
                 lastState = shell.State;
             }
+        }
+
+        void OnDestroy()
+        {
+            if (manager != null) manager.MuralDetected -= MarkFound;
+        }
+
+        void MarkFound(string slot)
+        {
+            // Reference image names may carry a suffix ("M2_target"); keep the slot part.
+            var entry = directory.murals.Find(e => slot.StartsWith(e.slot, System.StringComparison.OrdinalIgnoreCase));
+            if (entry != null && found.Add(entry.slot)) RefreshPins();
         }
 
         void BuildPins()
@@ -207,7 +231,7 @@ namespace ARMurals
         void RefreshProgress()
         {
             if (progressLabel == null || directory == null) return;
-            progressLabel.text = found.Count + " of " + directory.murals.Count + " murals found";
+            progressLabel.text = found.Count + " / " + directory.murals.Count + " found";
         }
 
         static void SetPinText(Button pin, string child, string text)
