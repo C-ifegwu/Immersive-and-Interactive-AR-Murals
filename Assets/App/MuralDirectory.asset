@@ -22,8 +22,8 @@ MonoBehaviour:
     location: Enterprise commons
     blurb: Five people wore this mask. Tap it to meet them, and find out who is next in line.
     mapPosition: {x: 0.18, y: 0.52}
-    photo: {fileID: 2800000, guid: 56473656772741a4da0e5ba246405c60, type: 3}
-    widthMeters: 3
+    photo: {fileID: 2800000, guid: 8b6412852d47f4e46a2bf4252be77d6a, type: 3}
+    widthMeters: 4.6
   - slot: M2
     title: The Caravan Moves On
     level: 1
