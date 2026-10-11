@@ -41,6 +41,8 @@ namespace ARMurals
         float sprint;
         float loop;                // position around the loop, radians
         Vector2[] riderScale = new Vector2[0];
+        AudioSource drums;
+        AudioSource wheels;
 
         protected override void ResetLayers()
         {
@@ -57,6 +59,8 @@ namespace ARMurals
             }
             foreach (var r in riders) SetColor(r, Color.white, 0f);
             if (domeCollider != null) domeCollider.enabled = false;
+            if (drums == null) drums = LoopSound("M3_Show");
+            if (wheels == null) wheels = LoopSound("M3_Wheels");
         }
 
         protected override IEnumerator Reveal()
@@ -106,7 +110,11 @@ namespace ARMurals
             float glowPulse = 0.45f + 0.15f * Mathf.Sin(Time.time * (show ? 8f : 1.5f));
             SetColor(glow, lightColours[1], show ? 0.85f : glowPulse);
 
+            float beat = Mathf.Clamp01((showUntil - Time.time) / 0.6f);
+            SetLoop(drums, drums != null ? Mathf.MoveTowards(drums.volume, beat * 0.7f, Time.deltaTime * 2f) : 0f);
+
             sprint = Mathf.MoveTowards(sprint, 0f, Time.deltaTime * 0.8f);
+            SetLoop(wheels, 0.08f + 0.5f * sprint / maxSprint, 0.8f + 0.4f * sprint / maxSprint);
             loop += riderSpeed * (1f + sprint) * Time.deltaTime;
             PlaceRiders();
         }
