@@ -52,12 +52,7 @@ namespace ARMurals
             }
 
             foreach (var e in experiences)
-            {
-                if (e == null) continue;
-                bySlot[e.MuralSlot] = e;
-                e.OnReset();
-                e.SetHidden(true);
-            }
+                if (e != null) bySlot[e.MuralSlot] = e;
         }
 
         void OnEnable() => imageManager.trackablesChanged.AddListener(OnTrackablesChanged);
@@ -65,6 +60,7 @@ namespace ARMurals
 
         void Start()
         {
+            ResetAll();
             if (ui == null) return;
             ui.SetState(UIShellController.ShellState.Start);
             ui.ResetRequested += ReplayActive;
