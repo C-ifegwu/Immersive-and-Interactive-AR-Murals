@@ -210,7 +210,7 @@ namespace ARMurals
             orbitPhase = 0f; spin = 0f; selected = -1; dragging = false;
             visited.Clear();
 
-            if (muralPlane != null) muralPlane.SetActive(showMuralPlane);
+            if (muralPlane != null) muralPlane.SetActive(showMuralPlane && Application.isEditor);
             SetTint(paintedOverlay, Color.white);
 
             if (maskRoot != null)
