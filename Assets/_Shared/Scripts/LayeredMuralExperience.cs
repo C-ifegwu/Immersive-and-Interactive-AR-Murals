@@ -209,7 +209,10 @@ namespace ARMurals
                 dragging = false;
                 var cam = Camera.main;
                 if (dragDistance < Screen.width * 0.02f && cam != null && Tap(cam.ScreenPointToRay(pos)))
+                {
                     PlayConfirm();
+                    Buzz();
+                }
             }
         }
 
@@ -265,6 +268,13 @@ namespace ARMurals
             src.pitch = pitch;
             if (volume > 0.01f && !src.isPlaying) src.Play();
             else if (volume <= 0.01f && src.isPlaying) src.Pause();
+        }
+
+        protected static void Buzz()
+        {
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+            Handheld.Vibrate();
+#endif
         }
 
         void Silence()
