@@ -61,6 +61,12 @@ namespace ARMurals
         [SerializeField] Color tabTextOn = new Color(0.063f, 0.071f, 0.110f, 1f);
         [SerializeField] Color tabTextOff = new Color(0.949f, 0.945f, 0.925f, 1f);
 
+        [Header("Ending")]
+        [SerializeField, TextArea(3, 6)] string endingText =
+            "The campus has changed. The mask waits for its next wearer, the camels keep walking, and the brass earrings hang still until the next gust of wind.";
+        [SerializeField, TextArea(2, 4)] string waitingText =
+            "More murals are waiting on campus. Head back to the map and pick the next one.";
+
         readonly List<Button> pins = new List<Button>();
         readonly HashSet<string> found = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
         MuralDirectory.Entry selected;
@@ -105,6 +111,7 @@ namespace ARMurals
             if (shell != null && shell.State != lastState)
             {
                 if (shell.State == UIShellController.ShellState.Start) Select(null);
+                if (shell.State == UIShellController.ShellState.Complete) ShowEnding();
                 lastState = shell.State;
             }
         }
@@ -131,7 +138,8 @@ namespace ARMurals
                 var label2 = arControls.Find("EffectsToggleButton")?.GetComponentInChildren<Text>();
                 if (label2 != null) label2.text = "HIDE AR";
                 if (manager != null) manager.ResetAll();
-                BeginScan(null);
+                if (AllFound()) shell.ShowComplete();
+                else BeginScan(null);
             });
 
             // HIDE AR / SHOW AR in the opposite corner: compare the plain painting with the effect.
@@ -148,6 +156,18 @@ namespace ARMurals
                 MuralExperienceBase.EffectsOff = !MuralExperienceBase.EffectsOff;
                 if (toggleLabel != null) toggleLabel.text = MuralExperienceBase.EffectsOff ? "SHOW AR" : "HIDE AR";
             });
+        }
+
+        bool AllFound() => directory != null && found.Count >= directory.murals.Count;
+
+        void ShowEnding()
+        {
+            bool all = AllFound();
+            foreach (var t in shell.GetComponentsInChildren<Text>(true))
+            {
+                if (t.name == "ExitTitle") t.text = all ? "ALL FIVE MURALS" : "THAT'S ONE MURAL";
+                if (t.name == "ExitBlurb") t.text = all ? endingText : waitingText;
+            }
         }
 
         void OnDestroy()
