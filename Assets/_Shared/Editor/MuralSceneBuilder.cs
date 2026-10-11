@@ -17,7 +17,7 @@ namespace ARMurals.EditorTools
 {
     /// <summary>
     /// Builds the complete M1 scene: AR rig, reference image library, mural surface,
-    /// the emerging bird rig, particles, audio and the full five-screen UI flow.
+    /// the emerging mask rig, particles, audio and the full five-screen UI flow.
     ///
     /// Re-runnable. It always rebuilds from the AR Mobile template's SampleScene, so
     /// Unity's own AR rig is never hand-assembled and nothing drifts.
@@ -25,7 +25,7 @@ namespace ARMurals.EditorTools
     public static class MuralSceneBuilder
     {
         const string TemplateScene = "Assets/Scenes/SampleScene.unity";
-        const string Root = "Assets/Murals/M1_Emergence";
+        const string Root = "Assets/Murals/M1_Chibueze";
         const string OutScene = Root + "/Scenes/M1_Emergence.unity";
         const string PrefabPath = Root + "/Prefabs/Mural_M1_Root.prefab";
         const string LibraryPath = Root + "/M1_ReferenceImages.asset";
@@ -33,11 +33,13 @@ namespace ARMurals.EditorTools
         const string OverlayTex = Root + "/Textures/M1_painted_region.png";
         const string MatFolder = Root + "/Materials";
 
-        // Real-world mural size in metres and where the bird is painted on it.
-        const float MuralW = 2.00f;
-        const float MuralH = 1.40f;
-        static readonly Vector3 PaintedLocal = new Vector3(-0.4004f, 0.1689f, 0.012f);
-        static readonly Vector2 OverlaySize = new Vector2(0.918f, 0.917f);
+        // Real-world mural size in metres and where the cubist mask sits on it.
+        // MuralW is ESTIMATED from the brick courses beside the mural (+/- 8%) - change this one
+        // number and everything else rescales with it.
+        const float MuralW = 4.60f;
+        const float MuralH = 2.950f;
+        static readonly Vector3 PaintedLocal = new Vector3(-0.9782f, -0.0281f, 0.012f);
+        static readonly Vector2 OverlaySize = new Vector2(2.5063f, 2.8313f);
 
         [MenuItem("AR Murals/2. Build M1 Emergence Scene", priority = 1)]
         public static void BuildM1()
@@ -51,6 +53,7 @@ namespace ARMurals.EditorTools
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
 
             PrepareTextureImports();
+            AssetDatabase.Refresh();
             var library = BuildReferenceLibrary();
 
             var scene = EditorSceneManager.OpenScene(TemplateScene, OpenSceneMode.Single);
@@ -79,7 +82,19 @@ namespace ARMurals.EditorTools
             TuneCamera();
 
             var ui = BuildUIShell();
-            var mural = BuildMuralRoot(ui);
+
+            MuralExperienceBase mural;
+            try
+            {
+                mural = BuildMuralRoot(ui);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError("[AR Murals] Building the mural root failed - the scene is incomplete. " +
+                               "The exception below names the line.");
+                Debug.LogException(e);
+                return;
+            }
 
             var manager = origin.GetComponent<ARMuralManager>() ?? origin.gameObject.AddComponent<ARMuralManager>();
             var mo = new SerializedObject(manager);
@@ -92,6 +107,28 @@ namespace ARMurals.EditorTools
             Directory.CreateDirectory(Path.GetDirectoryName(PrefabPath));
             PrefabUtility.SaveAsPrefabAssetAndConnect(mural.gameObject, PrefabPath, InteractionMode.AutomatedAction);
 
+            // --- reference image library, assigned last so nothing downstream can clear it
+            if (library != null)
+            {
+                var im2 = origin.GetComponent<ARTrackedImageManager>();
+                var so2 = new SerializedObject(im2);
+                so2.FindProperty("m_SerializedLibrary").objectReferenceValue = library;
+                so2.ApplyModifiedPropertiesWithoutUndo();
+                EditorUtility.SetDirty(im2);
+
+                so2.Update();
+                var got = so2.FindProperty("m_SerializedLibrary").objectReferenceValue;
+                Debug.Log(got != null
+                    ? "[AR Murals] Reference image library attached: " + got.name
+                    : "[AR Murals] WARNING - the reference image library did not attach. " +
+                      "Run AR Murals > Check My Scene, or drag M1_ReferenceImages onto the " +
+                      "AR Tracked Image Manager on XR Origin.");
+            }
+            else
+            {
+                Debug.LogWarning("[AR Murals] No reference image library was created - check " + MuralTex);
+            }
+
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, OutScene);
             AddToBuildSettings(OutScene);
@@ -103,7 +140,7 @@ namespace ARMurals.EditorTools
                       "  F  tracking found  (runs the full emergence)\n" +
                       "  L  tracking lost   (content hides, state kept)\n" +
                       "  R  reset           (mural back to untouched)\n" +
-                      "Click the bird to inspect it. Drag left/right to steer it.");
+                      "Tap the mask to open it and reveal the figures. Drag left/right to turn it.");
             EditorGUIUtility.PingObject(AssetDatabase.LoadAssetAtPath<SceneAsset>(OutScene));
         }
 
@@ -115,21 +152,57 @@ namespace ARMurals.EditorTools
             Import(OverlayTex, true);
         }
 
+        /// <summary>
+        /// Loads a texture, surviving the fact that SaveAndReimport invalidates the asset
+        /// handle so the next LoadAssetAtPath on the same path comes back null.
+        /// </summary>
+        internal static Texture2D LoadTexture(string path)
+        {
+            if (string.IsNullOrEmpty(path)) return null;
+
+            var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (tex != null) return tex;
+
+            // The main asset can read back null right after a reimport. Ask for every
+            // object at the path instead of just the main one.
+            foreach (var o in AssetDatabase.LoadAllAssetsAtPath(path))
+                if (o is Texture2D t) return t;
+
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+            tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (tex != null) return tex;
+
+            AssetDatabase.Refresh();
+            tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+            if (tex != null) return tex;
+
+            foreach (var o in AssetDatabase.LoadAllAssetsAtPath(path))
+                if (o is Texture2D t2) return t2;
+
+            Debug.LogWarning("[AR Murals] Could not load a Texture2D at " + path);
+            return null;
+        }
+
         internal static void Import(string path, bool alpha)
         {
             if (AssetImporter.GetAtPath(path) is not TextureImporter ti) return;
-            ti.textureType = TextureImporterType.Default;
-            ti.isReadable = true;                 // the reference image library needs to read it
-            ti.mipmapEnabled = true;
-            ti.maxTextureSize = 2048;
-            ti.alphaIsTransparency = alpha;
-            ti.alphaSource = alpha ? TextureImporterAlphaSource.FromInput : TextureImporterAlphaSource.None;
-            ti.SaveAndReimport();
+
+            bool changed = false;
+            if (ti.textureType != TextureImporterType.Default) { ti.textureType = TextureImporterType.Default; changed = true; }
+            if (!ti.isReadable) { ti.isReadable = true; changed = true; }      // the image library reads the pixels
+            if (!ti.mipmapEnabled) { ti.mipmapEnabled = true; changed = true; }
+            if (ti.maxTextureSize < 2048) { ti.maxTextureSize = 2048; changed = true; }
+            if (ti.alphaIsTransparency != alpha) { ti.alphaIsTransparency = alpha; changed = true; }
+
+            var wantAlpha = alpha ? TextureImporterAlphaSource.FromInput : TextureImporterAlphaSource.None;
+            if (ti.alphaSource != wantAlpha) { ti.alphaSource = wantAlpha; changed = true; }
+
+            if (changed) ti.SaveAndReimport();
         }
 
         static XRReferenceImageLibrary BuildReferenceLibrary()
         {
-            var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(MuralTex);
+            var tex = LoadTexture(MuralTex);
             if (tex == null)
             {
                 Debug.LogWarning("[AR Murals] " + MuralTex + " not found, skipping the reference image library.");
@@ -196,124 +269,309 @@ namespace ARMurals.EditorTools
         {
             var cam = Camera.main;
             if (cam == null) return;
-            cam.nearClipPlane = 0.05f;      // the bird comes within half a metre
+            cam.nearClipPlane = 0.05f;      // the mask comes within half a metre
             cam.farClipPlane = 25f;
         }
 
-        // ------------------------------------------------------------------ mural + bird
+        // ------------------------------------------------------------------ mural + mask
+
+        struct Piece
+        {
+            public string Name; public float U, V, W, H;
+            public Piece(string n, float u, float v, float w, float h) { Name = n; U = u; V = v; W = w; H = h; }
+        }
+
+        // Shards of the painted mask and the five painted figures, cut from the mural
+        // photograph itself. U/V are the centre and W/H the size, as fractions of the mural.
+        static readonly Piece[] Shards =
+        {
+            new Piece("M1_shard_00", 0.10564f, 0.12659f, 0.18139f, 0.19386f),
+            new Piece("M1_shard_01", 0.29110f, 0.13083f, 0.19226f, 0.20233f),
+            new Piece("M1_shard_02", 0.47011f, 0.13559f, 0.17935f, 0.21186f),
+            new Piece("M1_shard_03", 0.09307f, 0.32044f, 0.15625f, 0.24682f),
+            new Piece("M1_shard_04", 0.26325f, 0.29025f, 0.18818f, 0.23517f),
+            new Piece("M1_shard_05", 0.45414f, 0.30720f, 0.21128f, 0.26695f),
+            new Piece("M1_shard_06", 0.10394f, 0.51536f, 0.17799f, 0.21928f),
+            new Piece("M1_shard_07", 0.27548f, 0.51430f, 0.20584f, 0.23835f),
+            new Piece("M1_shard_08", 0.46467f, 0.50689f, 0.19022f, 0.24682f),
+            new Piece("M1_shard_09", 0.11583f, 0.70710f, 0.20177f, 0.21081f),
+            new Piece("M1_shard_10", 0.30740f, 0.67903f, 0.19361f, 0.30508f),
+            new Piece("M1_shard_11", 0.47792f, 0.79343f, 0.16372f, 0.39195f),
+            new Piece("M1_shard_12", 0.10190f, 0.87023f, 0.17391f, 0.23835f),
+            new Piece("M1_shard_13", 0.31793f, 0.87606f, 0.29484f, 0.22669f),
+        };
+
+        static readonly Piece[] Figures =
+        {
+            new Piece("M1_fig_queen",     0.60632f, 0.20922f, 0.13927f, 0.30191f),
+            new Piece("M1_fig_scholar",   0.79654f, 0.28072f, 0.15965f, 0.29661f),
+            new Piece("M1_fig_beret",     0.75068f, 0.51377f, 0.12228f, 0.21186f),
+            new Piece("M1_fig_statesman", 0.88655f, 0.49258f, 0.10870f, 0.21186f),
+            new Piece("M1_fig_elder",     0.81182f, 0.81568f, 0.14946f, 0.28602f),
+        };
+
+        const string ShardTex = Root + "/Textures/Shards/";
+
+        /// <summary>Mural-local metres from a normalised position on the mural.</summary>
+        static Vector3 Local(float u, float v, float z) =>
+            new Vector3((u - 0.5f) * MuralW, (0.5f - v) * MuralH, z);
 
         static MuralExperienceBase BuildMuralRoot(UIShellController ui)
         {
             var old = GameObject.Find("Mural_M1_Root");
             if (old != null) Object.DestroyImmediate(old);
 
+            var mats = Root + "/Materials";
             var root = new GameObject("Mural_M1_Root");
+
+            // Editor-testing position only. With no real image target the content would
+            // otherwise spawn at world origin, inside the camera. On device the manager
+            // reparents this to the tracked image and zeroes the local transform, so this
+            // offset never reaches the phone.
+            root.transform.position = new Vector3(0f, 0f, 5f);
+
             var content = new GameObject("Content");
             content.transform.SetParent(root.transform, false);
 
-            // --- the mural surface (placeholder only; the real wall replaces this)
-            var muralMat = TexturedMaterial("M1_Mural", MuralTex, false, Color.white);
-            var plane = Quad("MuralPlane_PLACEHOLDER", content.transform, MuralW, MuralH, muralMat);
+            // --- the mural surface (placeholder; the physical wall replaces it on site)
+            var muralMat = TexturedMaterial("M1_Mural", MuralTex, false, Color.white, mats);
+            var plane = Quad("MuralPlane", content.transform, MuralW, MuralH, muralMat);
 
-            // --- the painted bird, as a photographic patch that will dim away
-            var overlayMat = TexturedMaterial("M1_PaintedOverlay", OverlayTex, true, Color.white);
+            // --- the painted mask, as a photographic patch that will dim away
+            var overlayMat = TexturedMaterial("M1_PaintedOverlay", OverlayTex, true, Color.white, mats);
             var overlay = Quad("PaintedOverlay", content.transform, OverlaySize.x, OverlaySize.y, overlayMat);
             overlay.transform.localPosition = new Vector3(PaintedLocal.x, PaintedLocal.y, 0.004f);
 
-            // --- the bird
-            var bodyMat = ColorMaterial("M1_BirdBody", new Color(0.937f, 0.925f, 0.886f), true);
-            var accentMat = ColorMaterial("M1_BirdAccent", new Color(0.886f, 0.573f, 0.173f), true);
-            var darkMat = ColorMaterial("M1_BirdDark", new Color(0.110f, 0.118f, 0.180f), true);
+            // --- the mask: one quad per painted shard, each starting exactly where it is painted
+            var maskRoot = new GameObject("MaskRoot");
+            maskRoot.transform.SetParent(content.transform, false);
+            // Pivot sits at the centre of the PAINTED mask, so the assembled mask hovers in
+            // front of where it was painted and turns about its own axis, not the mural's.
+            maskRoot.transform.localPosition = new Vector3(PaintedLocal.x, PaintedLocal.y, 0f);
+            var pivot = maskRoot.transform.localPosition;
 
-            var subject = new GameObject("EmergingSubject");
-            subject.transform.SetParent(content.transform, false);
-            subject.transform.localPosition = PaintedLocal;
+            var shardTs = new List<Transform>();
+            var shardRs = new List<Renderer>();
+            foreach (var p in Shards)
+            {
+                var texPath = ShardTex + p.Name + ".png";
+                if (LoadTexture(texPath) == null)
+                {
+                    Debug.LogWarning("[AR Murals] Missing shard texture: " + texPath + " - skipped.");
+                    continue;
+                }
+                var mat = TexturedMaterial(p.Name, texPath, true, Color.white, mats);
+                var q = Quad(p.Name, maskRoot.transform, p.W * MuralW, p.H * MuralH, mat);
+                q.transform.localPosition = Local(p.U, p.V, 0.010f) - pivot;
+                shardTs.Add(q.transform);
+                shardRs.Add(q.GetComponent<MeshRenderer>());
+            }
 
-            var renderers = new List<Renderer>();
-            Part(subject.transform, "Body", PrimitiveType.Sphere, new Vector3(0, 0, 0),
-                 new Vector3(0.135f, 0.115f, 0.265f), bodyMat, renderers);
-            Part(subject.transform, "Head", PrimitiveType.Sphere, new Vector3(0, 0.055f, 0.145f),
-                 new Vector3(0.095f, 0.095f, 0.105f), bodyMat, renderers);
-            Part(subject.transform, "Beak", PrimitiveType.Cube, new Vector3(0, 0.045f, 0.215f),
-                 new Vector3(0.030f, 0.028f, 0.085f), accentMat, renderers);
-            Part(subject.transform, "EyeL", PrimitiveType.Sphere, new Vector3(-0.034f, 0.078f, 0.175f),
-                 new Vector3(0.020f, 0.020f, 0.020f), darkMat, renderers);
-            Part(subject.transform, "EyeR", PrimitiveType.Sphere, new Vector3(0.034f, 0.078f, 0.175f),
-                 new Vector3(0.020f, 0.020f, 0.020f), darkMat, renderers);
-            Part(subject.transform, "Tail", PrimitiveType.Cube, new Vector3(0, 0.010f, -0.215f),
-                 new Vector3(0.105f, 0.014f, 0.165f), accentMat, renderers);
+            // One collider for the whole mask: a reliable tap target on a phone.
+            var maskCol = maskRoot.AddComponent<BoxCollider>();
+            maskCol.center = Vector3.zero;
+            maskCol.size = new Vector3(OverlaySize.x * 0.95f, OverlaySize.y * 0.95f, 0.9f);
+            maskCol.enabled = false;
 
-            var wingL = Wing(subject.transform, "WingL", -1f, bodyMat, darkMat, renderers);
-            var wingR = Wing(subject.transform, "WingR", 1f, bodyMat, darkMat, renderers);
+            var lightGO = new GameObject("MaskLight");
+            lightGO.transform.SetParent(maskRoot.transform, false);
+            lightGO.transform.localPosition = new Vector3(0f, 0f, 0.35f);
+            var maskLight = lightGO.AddComponent<Light>();
+            maskLight.type = LightType.Point;
+            maskLight.color = new Color(1f, 0.88f, 0.66f);
+            maskLight.range = 3.2f;
+            maskLight.intensity = 0f;
+            maskLight.enabled = false;
 
-            var box = subject.AddComponent<BoxCollider>();
-            box.center = Vector3.zero;
-            box.size = new Vector3(0.85f, 0.26f, 0.55f);   // generous: this is a tap target on a phone
-            box.enabled = false;
+            // --- the five painted figures, cut from the mural's right half
+            var figRoot = new GameObject("FigureRoot");
+            figRoot.transform.SetParent(maskRoot.transform, false);
 
-            var lightGO = new GameObject("SubjectLight");
-            lightGO.transform.SetParent(subject.transform, false);
-            var pLight = lightGO.AddComponent<Light>();
-            pLight.type = LightType.Point;
-            pLight.color = new Color(1f, 0.86f, 0.62f);
-            pLight.range = 1.4f;
-            pLight.intensity = 0f;
-            pLight.enabled = false;
+            var figTs = new List<Transform>();
+            var figRs = new List<Renderer>();
+            var figCs = new List<Collider>();
+            foreach (var p in Figures)
+            {
+                var figPath = ShardTex + p.Name + ".png";
+                if (LoadTexture(figPath) == null)
+                {
+                    Debug.LogWarning("[AR Murals] Missing figure texture: " + figPath + " - skipped.");
+                    continue;
+                }
+                var mat = TexturedMaterial(p.Name, figPath, true, Color.white, mats);
+                var holder = new GameObject(p.Name);
+                holder.transform.SetParent(figRoot.transform, false);
 
-            // --- transition particles, at the point the bird leaves the wall
+                var q = Quad("Art", holder.transform, p.W * MuralW * 1.6f, p.H * MuralH * 1.6f, mat);
+                q.transform.localPosition = Vector3.zero;
+
+                var col = holder.AddComponent<BoxCollider>();
+                col.size = new Vector3(p.W * MuralW * 1.7f, p.H * MuralH * 1.7f, 0.25f);
+                col.enabled = false;
+
+                figTs.Add(holder.transform);
+                figRs.Add(q.GetComponent<MeshRenderer>());
+                figCs.Add(col);
+            }
+
+            // --- highlight quads sitting over each painted figure on the wall
+            var hlRoot = new GameObject("WallHighlights");
+            hlRoot.transform.SetParent(content.transform, false);
+            var hlMat = ColorMaterial("M1_Highlight", new Color(1f, 0.92f, 0.70f, 0f), true, mats);
+            var hls = new List<Renderer>();
+            foreach (var p in Figures)
+            {
+                var q = Quad("HL_" + p.Name, hlRoot.transform, p.W * MuralW * 1.15f, p.H * MuralH * 1.15f, hlMat);
+                q.transform.localPosition = Local(p.U, p.V, 0.006f);
+                hls.Add(q.GetComponent<MeshRenderer>());
+            }
+
+            // --- transition particles, at the centre of the painted mask
             var pGO = new GameObject("EmergeParticles");
             pGO.transform.SetParent(content.transform, false);
-            pGO.transform.localPosition = PaintedLocal;
+            pGO.transform.localPosition = new Vector3(PaintedLocal.x, PaintedLocal.y, 0.05f);
             var ps = pGO.AddComponent<ParticleSystem>();
-            ConfigureParticles(ps, accentMat);
+            ConfigureParticles(ps, ColorMaterial("M1_Spark", new Color(1f, 0.86f, 0.62f), true, mats));
+            var psShape = ps.shape;
+            psShape.radius = OverlaySize.x * 0.45f;
 
-            // --- the four named audio slots, with the placeholder clips loaded
+            // --- the four named audio slots
             BindAudio(root.transform, "SFX_Detect", Root + "/Audio/SFX_Detect.wav", false, 0f);
             BindAudio(root.transform, "SFX_Lost", Root + "/Audio/SFX_Lost.wav", false, 0f);
             BindAudio(root.transform, "SFX_Confirm", Root + "/Audio/SFX_Confirm.wav", false, 0f);
             BindAudio(root.transform, "Ambient_Bed", Root + "/Audio/Ambient_Bed.wav", true, 1f);
 
-            // --- wire the experience
+            // --- wire it up
             var exp = root.AddComponent<M1EmergenceExperience>();
             var so = new SerializedObject(exp);
-            so.FindProperty("muralSlot").stringValue = "M1";
-            so.FindProperty("muralWidthMeters").floatValue = MuralW;
-            so.FindProperty("contentRoot").objectReferenceValue = content.transform;
-            so.FindProperty("placeholderMuralPlane").objectReferenceValue = plane;
-            so.FindProperty("paintedOverlay").objectReferenceValue = overlay.GetComponent<MeshRenderer>();
-            so.FindProperty("subject").objectReferenceValue = subject.transform;
-            so.FindProperty("wingLeft").objectReferenceValue = wingL;
-            so.FindProperty("wingRight").objectReferenceValue = wingR;
-            so.FindProperty("subjectLight").objectReferenceValue = pLight;
-            so.FindProperty("subjectCollider").objectReferenceValue = box;
-            so.FindProperty("emergeParticles").objectReferenceValue = ps;
-            so.FindProperty("ui").objectReferenceValue = ui;
+            SetStr(so, "muralSlot", "M1");
+            SetFloat(so, "muralWidthMeters", MuralW);
+            SetRef(so, "contentRoot", content.transform);
+            SetRef(so, "muralPlane", plane);
+            SetRef(so, "paintedOverlay", overlay.GetComponent<MeshRenderer>());
+            SetRef(so, "maskRoot", maskRoot.transform);
+            SetRef(so, "maskCollider", maskCol);
+            SetRef(so, "maskLight", maskLight);
+            SetRef(so, "figureRoot", figRoot.transform);
+            SetRef(so, "emergeParticles", ps);
+            SetRef(so, "ui", ui);
 
-            var rp = so.FindProperty("subjectRenderers");
-            rp.arraySize = renderers.Count;
-            for (int i = 0; i < renderers.Count; i++)
-                rp.GetArrayElementAtIndex(i).objectReferenceValue = renderers[i];
+            FillList(so, "shards", shardTs);
+            FillList(so, "shardRenderers", shardRs);
+            FillList(so, "figures", figTs);
+            FillList(so, "figureRenderers", figRs);
+            FillList(so, "figureColliders", figCs);
+            FillList(so, "wallHighlights", hls);
 
-            so.FindProperty("paintedLocalPos").vector3Value = PaintedLocal;
+            // Panel text for each painted figure, in the same order as the Figures table.
+            // All five identifications confirmed with the ALU guest relations team.
+            var figureText = new[]
+            {
+                "YAA ASANTEWAA\n\n" +
+                "Queen mother of Ejisu in the Asante kingdom. In 1900 the British governor " +
+                "demanded to sit on the Golden Stool, the soul of the Asante nation, and the " +
+                "chiefs hesitated. She stood and told them that if the men of Asante would not " +
+                "go forward, then the women would. She led the siege of the British fort at " +
+                "Kumasi at around sixty years old, in the last major war the Asante fought " +
+                "against colonial rule. She was exiled to the Seychelles and died there in 1921.",
+
+                "MANSA MUSA\n\n" +
+                "Ruler of the Mali Empire in the early fourteenth century. His pilgrimage to Mecca " +
+                "in 1324 carried so much gold that its distribution is said to have unsettled " +
+                "economies along the route for years. He returned to build Timbuktu into a centre " +
+                "of scholarship. The mural paints him as medieval European maps first drew him: " +
+                "crowned, enthroned, holding gold.",
+
+                "THOMAS SANKARA\n\n" +
+                "President of Burkina Faso from 1983 until his assassination in 1987. He renamed " +
+                "the country Burkina Faso, land of upright people, and in four years pushed through " +
+                "land redistribution, mass vaccination, and some of the continent's earliest " +
+                "government action against forced marriage and for women in public office. " +
+                "He was thirty-seven when he was killed.",
+
+                "JULIUS NYERERE\n\n" +
+                "First president of Tanzania, and the only one of his generation of African " +
+                "leaders to hand over power voluntarily and walk away. Tanzanians called him " +
+                "Mwalimu, the teacher. He argued that independence meant nothing without " +
+                "economic independence, pushed literacy from a small minority to most of the " +
+                "country, and gave shelter and backing to liberation movements fighting across " +
+                "southern Africa while they had nowhere else to go.",
+
+                "WINNIE MADIKIZELA-MANDELA\n\n" +
+                "South African organiser who held the anti-apartheid movement together through " +
+                "decades of banning orders, solitary detention and internal exile while Nelson " +
+                "Mandela was imprisoned. Called the Mother of the Nation, revered and contested " +
+                "in equal measure, and never quiet.",
+            };
+
+            var info = so.FindProperty("figureInfo");
+            if (info != null)
+            {
+                info.arraySize = figureText.Length;
+                for (int i = 0; i < figureText.Length; i++)
+                    info.GetArrayElementAtIndex(i).stringValue = figureText[i];
+            }
+
+            var maskText = so.FindProperty("maskInfo");
+            if (maskText != null)
+                maskText.stringValue =
+                    "THE MASK\n\n" +
+                    "The left half of this mural is not a portrait. It is a form - a mask built from " +
+                    "interlocking planes of ochre, blue and cream.\n\n" +
+                    "In the masquerade traditions this comes out of, a mask is not a disguise and it " +
+                    "is not a likeness. It is a vessel. Hanging on a wall it is only wood and paint. " +
+                    "It becomes an ancestor at the moment somebody puts it on and dances - and the " +
+                    "person inside is never named. That is the point of it.\n\n" +
+                    "So this is not a monument to the five people painted beside it. They are its " +
+                    "previous wearers.\n\n" +
+                    "Open it. Meet all five. Then tap it one more time.";
+
+            var wornText = so.FindProperty("wornInfo");
+            if (wornText != null)
+                wornText.stringValue =
+                    "THE MASK IS EMPTY.\n\n" +
+                    "A masquerade mask is not a portrait and not a disguise. It is a vessel. " +
+                    "On a wall it is only paint. It becomes an ancestor while somebody is " +
+                    "inside it, dancing - and the wearer is never named.\n\n" +
+                    "Yaa Asantewaa. Mansa Musa. Thomas Sankara. Julius Nyerere. " +
+                    "Winnie Madikizela-Mandela. Five people who wore this, and set it down.\n\n" +
+                    "You are looking straight through it now. This wall is not a monument. " +
+                    "It is a queue.";
+
             so.ApplyModifiedPropertiesWithoutUndo();
 
+            figRoot.SetActive(false);
             return exp;
         }
 
-        static Transform Wing(Transform parent, string name, float side, Material skin, Material dark, List<Renderer> sink)
+        static void SetRef(SerializedObject so, string field, Object value)
         {
-            // Pivot at the shoulder so a single Z rotation flaps the whole wing.
-            var pivot = new GameObject(name);
-            pivot.transform.SetParent(parent, false);
-            pivot.transform.localPosition = new Vector3(side * 0.055f, 0.030f, 0.020f);
+            var p = so.FindProperty(field);
+            if (p == null) { Debug.LogWarning("[AR Murals] No serialized field named '" + field + "'."); return; }
+            p.objectReferenceValue = value;
+        }
 
-            Part(pivot.transform, "Inner", PrimitiveType.Cube, new Vector3(side * 0.150f, 0f, 0f),
-                 new Vector3(0.300f, 0.016f, 0.150f), skin, sink);
-            Part(pivot.transform, "Outer", PrimitiveType.Cube, new Vector3(side * 0.330f, 0.012f, -0.030f),
-                 new Vector3(0.230f, 0.013f, 0.100f), skin, sink);
-            Part(pivot.transform, "Edge", PrimitiveType.Cube, new Vector3(side * 0.260f, 0.009f, -0.082f),
-                 new Vector3(0.420f, 0.011f, 0.022f), dark, sink);
-            return pivot.transform;
+        static void SetStr(SerializedObject so, string field, string value)
+        {
+            var p = so.FindProperty(field);
+            if (p == null) { Debug.LogWarning("[AR Murals] No serialized field named '" + field + "'."); return; }
+            p.stringValue = value;
+        }
+
+        static void SetFloat(SerializedObject so, string field, float value)
+        {
+            var p = so.FindProperty(field);
+            if (p == null) { Debug.LogWarning("[AR Murals] No serialized field named '" + field + "'."); return; }
+            p.floatValue = value;
+        }
+
+        static void FillList<T>(SerializedObject so, string field, List<T> items) where T : Object
+        {
+            var p = so.FindProperty(field);
+            if (p == null) { Debug.LogWarning("[AR Murals] No serialized list named '" + field + "'."); return; }
+            p.arraySize = items.Count;
+            for (int i = 0; i < items.Count; i++)
+                p.GetArrayElementAtIndex(i).objectReferenceValue = items[i];
         }
 
         internal static void Part(Transform parent, string name, PrimitiveType type, Vector3 pos, Vector3 scale,
@@ -408,12 +666,13 @@ namespace ARMurals.EditorTools
         internal static Material TexturedMaterial(string name, string texPath, bool transparent, Color tint, string folder = null)
         {
             var m = MakeMaterial(name, "Universal Render Pipeline/Unlit", transparent, tint, folder);
-            var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(texPath);
+            var tex = LoadTexture(texPath);
             if (tex != null)
             {
                 if (m.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", tex);
                 if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", tex);
             }
+            else Debug.LogWarning("[AR Murals] Material '" + name + "' has no texture - could not load " + texPath);
             EditorUtility.SetDirty(m);
             return m;
         }
@@ -464,12 +723,21 @@ namespace ARMurals.EditorTools
             return m;
         }
 
+        /// <summary>
+        /// The mural scene must be index 0, or the APK launches the AR template's demo
+        /// instead of the experience. The template scene is dropped entirely.
+        /// </summary>
         internal static void AddToBuildSettings(string path)
         {
-            var scenes = new List<EditorBuildSettingsScene>(EditorBuildSettings.scenes);
-            if (scenes.Exists(s => s.path == path)) return;
-            scenes.Add(new EditorBuildSettingsScene(path, true));
+            var scenes = new List<EditorBuildSettingsScene> { new EditorBuildSettingsScene(path, true) };
+            foreach (var existing in EditorBuildSettings.scenes)
+            {
+                if (existing.path == path) continue;
+                if (existing.path == "Assets/Scenes/SampleScene.unity") continue;
+                scenes.Add(existing);
+            }
             EditorBuildSettings.scenes = scenes.ToArray();
+            Debug.Log("[AR Murals] Build settings: launch scene is now " + path);
         }
 
         // ------------------------------------------------------------------ UI shell
@@ -504,10 +772,10 @@ namespace ARMurals.EditorTools
                   new Color(0.65f, 0.67f, 0.74f, 1f));
             Label(start.transform, "Title", "MURALS,\nIN MOTION", 110, new Vector2(0, 230), new Vector2(950, 300), Paper);
             Label(start.transform, "Blurb",
-                  "Point your phone at a mural on campus and watch the artwork step off the wall.",
+                  "Point your phone at the mask on the wall and find out who has worn it.",
                   40, new Vector2(0, -40), new Vector2(820, 220), new Color(0.78f, 0.79f, 0.84f, 1f));
             var begin = MakeButton(start.transform, "BeginButton", "START SCANNING", new Vector2(0, -330), null, Accent, Ink);
-            Label(start.transform, "Credit", "M1  ·  EMERGENCE  ·  PLACEHOLDER BUILD", 28,
+            Label(start.transform, "Credit", "M1  ·  EMERGENCE  ·  ALU KIGALI", 28,
                   new Vector2(0, -760), new Vector2(900, 60), new Color(0.45f, 0.47f, 0.55f, 1f));
 
             // ---------- SCANNING
@@ -538,7 +806,7 @@ namespace ARMurals.EditorTools
             var infoBtn = MakeButton(bar.transform, "InfoButton", "INFO", new Vector2(-320, 0), new Vector2(280, 110));
             var resetBtn = MakeButton(bar.transform, "ResetButton", "REPLAY", new Vector2(0, 0), new Vector2(280, 110));
             var finishBtn = MakeButton(bar.transform, "FinishButton", "DONE", new Vector2(320, 0), new Vector2(280, 110));
-            Label(ar.transform, "Nudge", "Tap the bird  ·  Drag to steer it", 30,
+            Label(ar.transform, "Nudge", "Tap the mask  ·  Drag to turn it", 30,
                   new Vector2(0, -660), new Vector2(900, 60), new Color(0.88f, 0.89f, 0.93f, 0.85f));
 
             // ---------- INFO
@@ -549,10 +817,16 @@ namespace ARMurals.EditorTools
             crt.sizeDelta = new Vector2(920, 920);
             crt.anchoredPosition = Vector2.zero;
             Rule(card.transform, new Vector2(0, 360), new Vector2(100, 8), Accent);
-            Label(card.transform, "InfoTitle", "THE BIRD", 60, new Vector2(0, 280), new Vector2(820, 90), Paper);
-            var infoBody = Label(card.transform, "InfoBody", "PLACEHOLDER", 38,
+            Label(card.transform, "InfoTitle", "THE MASK", 60, new Vector2(0, 280), new Vector2(820, 90), Paper);
+            var infoBody = Label(card.transform, "InfoBody", "", 38,
                                  new Vector2(0, 20), new Vector2(800, 460), new Color(0.82f, 0.84f, 0.89f, 1f));
             infoBody.alignment = TextAnchor.UpperLeft;
+            // Figure biographies and the closing text differ a lot in length; best-fit
+            // keeps every one of them inside the card instead of spilling past CLOSE.
+            infoBody.resizeTextForBestFit = true;
+            infoBody.resizeTextMinSize = 20;
+            infoBody.resizeTextMaxSize = 38;
+            infoBody.verticalOverflow = VerticalWrapMode.Truncate;
             var infoClose = MakeButton(card.transform, "InfoCloseButton", "CLOSE", new Vector2(0, -340), new Vector2(360, 110));
 
             // ---------- COMPLETION / EXIT

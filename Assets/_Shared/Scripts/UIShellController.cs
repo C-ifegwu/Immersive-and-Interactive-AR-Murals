@@ -28,6 +28,7 @@ namespace ARMurals
         [SerializeField] Button finishButton;
         [SerializeField] Button restartButton;
         [SerializeField] Text infoBody;
+        [SerializeField] Text infoTitle;
 
         public ShellState State { get; private set; } = ShellState.Start;
 
@@ -62,8 +63,24 @@ namespace ARMurals
             SetState(State == ShellState.Info ? ShellState.Experience : ShellState.Info);
         }
 
+        /// <summary>
+        /// The first line of every info string is its heading - "THE MASK", a figure's
+        /// name, the closing line. Lift that line into the card's title so the panel is
+        /// never headed with the wrong thing, and show the rest as the body.
+        /// </summary>
         public void SetInfoText(string body)
         {
+            body ??= string.Empty;
+
+            if (infoTitle != null)
+            {
+                int br = body.IndexOf('\n');
+                if (br > 0)
+                {
+                    infoTitle.text = body.Substring(0, br).Trim().TrimEnd('.');
+                    body = body.Substring(br).TrimStart('\n');
+                }
+            }
             if (infoBody != null) infoBody.text = body;
         }
 
@@ -79,6 +96,15 @@ namespace ARMurals
             if (arControls == null) arControls = Find("ARControls");
             if (infoPanel == null) infoPanel = Find("InfoPanel");
             if (exitPanel == null) exitPanel = Find("ExitPanel");
+            if (infoTitle == null) infoTitle = FindText("InfoTitle");
+            if (infoBody == null) infoBody = FindText("InfoBody");
+        }
+
+        Text FindText(string n)
+        {
+            foreach (var t in GetComponentsInChildren<Text>(true))
+                if (t != null && t.name == n) return t;
+            return null;
         }
 
         GameObject Find(string n)

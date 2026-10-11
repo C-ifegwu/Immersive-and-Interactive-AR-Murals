@@ -52,6 +52,10 @@ Tick **Debug Keys** on your experience component and press Play:
 | L | simulate tracking lost |
 | R | reset to untouched |
 
+M1 adds one of its own: **M** jumps straight to the closing beat (the wearing)
+without having to tap all five figures first. It is editor-only convenience and does
+nothing on a phone.
+
 This is what lets you build and polish your entire mural today, before anyone has
 photographed anything.
 

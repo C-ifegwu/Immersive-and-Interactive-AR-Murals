@@ -35,6 +35,9 @@ namespace ARMurals
         readonly Dictionary<TrackableId, float> limitedSince =
             new Dictionary<TrackableId, float>();
 
+        // XR Simulation raises unnamed images every frame; warn once per name, never per frame.
+        readonly HashSet<string> warnedAbout = new HashSet<string>();
+
         void Awake()
         {
             imageManager = GetComponent<ARTrackedImageManager>();
@@ -43,8 +46,6 @@ namespace ARMurals
             {
                 if (e == null) continue;
                 bySlot[e.MuralSlot] = e;
-                e.OnReset();
-                e.SetHidden(true);
             }
         }
 
@@ -53,6 +54,15 @@ namespace ARMurals
 
         void Start()
         {
+            // Reset here, not in Awake: Unity guarantees every Awake has run by now, so
+            // each experience has initialised itself before we ask it to reset.
+            foreach (var e in experiences)
+            {
+                if (e == null) continue;
+                e.OnReset();
+                e.SetHidden(true);
+            }
+
             if (ui == null) return;
             ui.SetState(UIShellController.ShellState.Start);
             ui.ResetRequested += ReplayActive;
@@ -110,7 +120,9 @@ namespace ARMurals
             var slot = SlotFor(image);
             if (slot == null)
             {
-                Debug.LogWarning($"[ARMuralManager] No experience registered for reference image '{image.referenceImage.name}'.");
+                var name = image.referenceImage.name;
+                if (!string.IsNullOrEmpty(name) && warnedAbout.Add(name))
+                    Debug.LogWarning($"[ARMuralManager] No experience registered for reference image '{name}'.");
                 return;
             }
 
@@ -129,7 +141,7 @@ namespace ARMurals
         {
             if (!bound.TryGetValue(image.trackableId, out var exp))
             {
-                Bind(image);
+                if (SlotFor(image) != null) Bind(image);
                 return;
             }
 
