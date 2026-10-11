@@ -43,6 +43,10 @@ namespace ARMurals
         readonly Dictionary<string, AudioClip> clips = new Dictionary<string, AudioClip>();
         readonly List<AudioSource> loops = new List<AudioSource>();
         AudioSource sounds;
+        Coroutine dissolve;
+        readonly List<Renderer> fading = new List<Renderer>();
+        readonly List<Color> fadeColors = new List<Color>();
+        MaterialPropertyBlock fadeBlock;
 
         // ------------------------------------------------------------------ what each mural writes
 
@@ -73,6 +77,7 @@ namespace ARMurals
 
         protected override void HandleReset()
         {
+            StopDissolve();
             if (sequence != null) { StopCoroutine(sequence); sequence = null; }
             Opened = false;
             dragging = false;
@@ -85,6 +90,7 @@ namespace ARMurals
 
         protected override void HandleTrackingFound()
         {
+            StopDissolve();
             if (contentRoot != null) contentRoot.gameObject.SetActive(true);
             if (ui != null) ui.SetInfoText(infoBody);
             if (Opened) return;                       // resume where it was
@@ -94,10 +100,61 @@ namespace ARMurals
 
         protected override void HandleTrackingLost()
         {
-            if (contentRoot != null) contentRoot.gameObject.SetActive(false);
+            StopDissolve();
+            if (contentRoot != null && contentRoot.gameObject.activeInHierarchy) dissolve = StartCoroutine(Dissolve());
+            else if (contentRoot != null) contentRoot.gameObject.SetActive(false);
             dragging = false;
             Silence();
             if (ui != null && ui.State == UIShellController.ShellState.Info) ui.ToggleInfo();
+        }
+
+        IEnumerator Dissolve()
+        {
+            fadeBlock ??= new MaterialPropertyBlock();
+            fading.Clear();
+            fadeColors.Clear();
+            foreach (var r in contentRoot.GetComponentsInChildren<Renderer>())
+            {
+                r.GetPropertyBlock(fadeBlock);
+                var c = fadeBlock.HasColor(BaseColorId) ? fadeBlock.GetColor(BaseColorId)
+                      : r.sharedMaterial != null && r.sharedMaterial.HasProperty(BaseColorId) ? r.sharedMaterial.GetColor(BaseColorId)
+                      : Color.white;
+                fading.Add(r);
+                fadeColors.Add(c);
+            }
+
+            for (float t = 0f; t < 0.4f; t += Time.deltaTime)
+            {
+                FadeTo(1f - Ease(t / 0.4f));
+                yield return null;
+            }
+            contentRoot.gameObject.SetActive(false);
+            FadeTo(1f);
+            fading.Clear();
+            dissolve = null;
+        }
+
+        void FadeTo(float k)
+        {
+            for (int i = 0; i < fading.Count; i++)
+            {
+                if (fading[i] == null) continue;
+                var c = fadeColors[i];
+                c.a *= k;
+                fading[i].GetPropertyBlock(fadeBlock);
+                fadeBlock.SetColor(BaseColorId, c);
+                fadeBlock.SetColor(ColorId, c);
+                fading[i].SetPropertyBlock(fadeBlock);
+            }
+        }
+
+        void StopDissolve()
+        {
+            if (dissolve == null) return;
+            StopCoroutine(dissolve);
+            dissolve = null;
+            FadeTo(1f);
+            fading.Clear();
         }
 
         IEnumerator Open()
