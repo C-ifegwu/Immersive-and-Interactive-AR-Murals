@@ -44,6 +44,13 @@ namespace ARMurals
         {
             imageManager = GetComponent<ARTrackedImageManager>();
 
+            // Nothing is heard without a listener; the AR camera does not always come with one.
+            if (FindAnyObjectByType<AudioListener>() == null)
+            {
+                var cam = Camera.main != null ? Camera.main : GetComponentInChildren<Camera>();
+                if (cam != null) cam.gameObject.AddComponent<AudioListener>();
+            }
+
             foreach (var e in experiences)
             {
                 if (e == null) continue;

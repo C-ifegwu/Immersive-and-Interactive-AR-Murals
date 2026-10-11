@@ -36,6 +36,10 @@ namespace ARMurals
         [Header("Debug")]
         [SerializeField] bool debugKeys = true;
 
+        /// <summary>Set by the HIDE AR toggle: an active mural keeps running but shows nothing,
+        /// so the viewer sees the plain painting. Turning it back on resumes where it was.</summary>
+        public static bool EffectsOff;
+
         public string MuralSlot => muralSlot;
         public float MuralWidthMeters => muralWidthMeters;
         public bool IsActive { get; private set; }
@@ -50,6 +54,10 @@ namespace ARMurals
 
         protected virtual void Update()
         {
+            if (IsActive && contentRoot != null && contentRoot.gameObject.activeSelf == EffectsOff)
+                contentRoot.gameObject.SetActive(!EffectsOff);
+            if (ambientBed != null) ambientBed.mute = EffectsOff;
+
             if (!debugKeys) return;
             var kb = Keyboard.current;
             if (kb == null) return;
@@ -115,6 +123,32 @@ namespace ARMurals
             if (sfxLost == null) sfxLost = FindSlot("SFX_Lost");
             if (sfxConfirm == null) sfxConfirm = FindSlot("SFX_Confirm");
             if (ambientBed == null) ambientBed = FindSlot("Ambient_Bed");
+
+            // Any slot without a clip falls back to Resources/Audio: the mural's own ambient
+            // bed (Mx_Ambient) and the shared Detect / Lost / Confirm sounds.
+            sfxDetect = WithClip(sfxDetect, "SFX_Detect", "Audio/Detect", false);
+            sfxLost = WithClip(sfxLost, "SFX_Lost", "Audio/Lost", false);
+            sfxConfirm = WithClip(sfxConfirm, "SFX_Confirm", "Audio/Confirm", false);
+            ambientBed = WithClip(ambientBed, "Ambient_Bed", "Audio/" + muralSlot + "_Ambient", true);
+        }
+
+        AudioSource WithClip(AudioSource src, string slotName, string resource, bool loop)
+        {
+            if (src != null && src.clip != null) return src;
+            var clip = Resources.Load<AudioClip>(resource);
+            if (clip == null) return src;
+            if (src == null)
+            {
+                var go = new GameObject(slotName);
+                go.transform.SetParent(transform, false);
+                src = go.AddComponent<AudioSource>();
+            }
+            src.clip = clip;
+            src.loop = loop;
+            src.playOnAwake = false;
+            src.spatialBlend = 0f;              // 2D: always audible, whatever the mural's scale
+            src.volume = loop ? 0.4f : 0.85f;
+            return src;
         }
 
         AudioSource FindSlot(string slotName)

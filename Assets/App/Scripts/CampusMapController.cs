@@ -127,8 +127,26 @@ namespace ARMurals
             if (label != null) label.text = "< SCAN";
             back.onClick.AddListener(() =>
             {
+                MuralExperienceBase.EffectsOff = false;
+                var label2 = arControls.Find("EffectsToggleButton")?.GetComponentInChildren<Text>();
+                if (label2 != null) label2.text = "HIDE AR";
                 if (manager != null) manager.ResetAll();
                 BeginScan(null);
+            });
+
+            // HIDE AR / SHOW AR in the opposite corner: compare the plain painting with the effect.
+            var toggle = Instantiate(backToMapButton, arControls);
+            toggle.name = "EffectsToggleButton";
+            toggle.onClick.RemoveAllListeners();
+            var rt = (RectTransform)toggle.transform;
+            rt.anchoredPosition = new Vector2(-rt.anchoredPosition.x, rt.anchoredPosition.y);
+            var toggleLabel = toggle.GetComponentInChildren<Text>();
+            MuralExperienceBase.EffectsOff = false;
+            if (toggleLabel != null) toggleLabel.text = "HIDE AR";
+            toggle.onClick.AddListener(() =>
+            {
+                MuralExperienceBase.EffectsOff = !MuralExperienceBase.EffectsOff;
+                if (toggleLabel != null) toggleLabel.text = MuralExperienceBase.EffectsOff ? "SHOW AR" : "HIDE AR";
             });
         }
 
