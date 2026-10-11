@@ -37,6 +37,8 @@ namespace ARMurals
         float[] travelled = new float[0];
         bool resting;
         float wind;
+        float nextBell;
+        AudioSource storm;
 
         protected override void ResetLayers()
         {
@@ -46,6 +48,7 @@ namespace ARMurals
             if (caravanCollider != null) caravanCollider.enabled = false;
             resting = false;
             wind = 0f;
+            if (storm == null) storm = LoopSound("M2_Storm");
         }
 
         protected override IEnumerator Reveal()
@@ -78,6 +81,13 @@ namespace ARMurals
                 Place(i, travelled[i] * Mathf.Sign(w.distance), alpha, 1f);
             }
 
+            SetLoop(storm, Mathf.Clamp01(wind / maxWind) * 0.8f, 0.9f + wind * 0.05f);
+            if (!resting && Time.time >= nextBell)
+            {
+                PlaySound("M2_Bells", 0.35f, Random.Range(0.8f, 1.1f));
+                nextBell = Time.time + Random.Range(2.5f, 4.5f) / (1f + wind * 0.5f);
+            }
+
             if (sand != null)
             {
                 var main = sand.main;
@@ -92,6 +102,7 @@ namespace ARMurals
             // INTERACTION 1: stop to rest, and tell the story.
             if (!Hit(caravanCollider, ray)) return false;
             resting = !resting;
+            if (resting) PlaySound("M2_Exhale", 0.9f, 0.7f);
             ToggleInfo();
             return true;
         }
