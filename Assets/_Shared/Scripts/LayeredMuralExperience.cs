@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -39,6 +40,10 @@ namespace ARMurals
         static readonly int ColorId = Shader.PropertyToID("_Color");
         MaterialPropertyBlock mpb;
 
+        readonly Dictionary<string, AudioClip> clips = new Dictionary<string, AudioClip>();
+        readonly List<AudioSource> loops = new List<AudioSource>();
+        AudioSource sounds;
+
         // ------------------------------------------------------------------ what each mural writes
 
         /// <summary>Put every layer back exactly over its paint, nothing moving.</summary>
@@ -72,6 +77,7 @@ namespace ARMurals
             Opened = false;
             dragging = false;
             SetColor(dimmer, dimTint, 0f);
+            Silence();
             ResetLayers();
             if (contentRoot != null) contentRoot.gameObject.SetActive(true);
             if (ui != null) ui.SetInfoText(infoBody);
@@ -90,6 +96,7 @@ namespace ARMurals
         {
             if (contentRoot != null) contentRoot.gameObject.SetActive(false);
             dragging = false;
+            Silence();
             if (ui != null && ui.State == UIShellController.ShellState.Info) ui.ToggleInfo();
         }
 
@@ -113,6 +120,7 @@ namespace ARMurals
         protected override void Update()
         {
             base.Update();                 // debug keys F / L / R
+            foreach (var l in loops) l.mute = EffectsOff;
             if (!IsActive || !Opened) return;
             ReadPointer();
             Live();
@@ -172,6 +180,59 @@ namespace ARMurals
             mpb.SetColor(BaseColorId, c);
             mpb.SetColor(ColorId, c);
             r.SetPropertyBlock(mpb);
+        }
+
+        protected void PlaySound(string clipName, float volume = 1f, float pitch = 1f)
+        {
+            var clip = Clip(clipName);
+            if (clip == null || EffectsOff) return;
+            if (sounds == null) sounds = NewSource("Sounds");
+            sounds.pitch = pitch;
+            sounds.PlayOneShot(clip, volume);
+        }
+
+        protected AudioSource LoopSound(string clipName)
+        {
+            var src = NewSource(clipName);
+            src.clip = Clip(clipName);
+            src.loop = true;
+            src.volume = 0f;
+            loops.Add(src);
+            return src;
+        }
+
+        protected static void SetLoop(AudioSource src, float volume, float pitch = 1f)
+        {
+            if (src == null || src.clip == null) return;
+            src.volume = volume;
+            src.pitch = pitch;
+            if (volume > 0.01f && !src.isPlaying) src.Play();
+            else if (volume <= 0.01f && src.isPlaying) src.Pause();
+        }
+
+        void Silence()
+        {
+            foreach (var l in loops) SetLoop(l, 0f);
+        }
+
+        AudioClip Clip(string clipName)
+        {
+            if (!clips.TryGetValue(clipName, out var clip))
+            {
+                clip = Resources.Load<AudioClip>("Audio/" + clipName);
+                clips[clipName] = clip;
+            }
+            return clip;
+        }
+
+        AudioSource NewSource(string sourceName)
+        {
+            var go = new GameObject(sourceName);
+            go.transform.SetParent(transform, false);
+            var src = go.AddComponent<AudioSource>();
+            src.playOnAwake = false;
+            src.spatialBlend = 0f;
+            return src;
         }
 
         /// <summary>The viewer's camera position in wall space (null in edit mode).</summary>
