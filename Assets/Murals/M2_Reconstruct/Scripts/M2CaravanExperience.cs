@@ -35,6 +35,7 @@ namespace ARMurals
         [SerializeField] float maxWind = 4f;
         [SerializeField] int leadWalker;
         [SerializeField] float kneelDepth = 0.18f;
+        [SerializeField] float stormLean = 4f;
 
         float[] travelled = new float[0];
         bool resting;
@@ -125,6 +126,8 @@ namespace ARMurals
             float step = Mathf.Abs(Mathf.Sin(travelled.Length > i ? travelled[i] * 60f : 0f)) * w.stepHeight * lifted;
             w.renderer.transform.localPosition = w.restPos + new Vector3(x, step, -lift * lifted);
             SetColor(w.renderer, Color.white, alpha);
+            float lean = -Mathf.Sign(w.distance) * stormLean * Mathf.Clamp01(wind / maxWind) * lifted;
+            w.renderer.transform.localRotation = Quaternion.Euler(0f, 0f, lean);
             if (i == leadWalker) Kneel(w.renderer.transform);
         }
 
