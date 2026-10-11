@@ -37,6 +37,8 @@ namespace ARMurals
         float[] velocity = new float[0];
         float alive;              // 0 = still paint, 1 = fully alive
         float gust;               // signed: + blows right
+        int lastGlint = -1;
+        AudioSource wind;
 
         protected override void ResetLayers()
         {
@@ -48,6 +50,7 @@ namespace ARMurals
             foreach (var c in canopies) if (c != null) c.localRotation = Quaternion.identity;
             foreach (var c in earringColliders) if (c != null) c.enabled = false;
             SetColor(glint, Color.white, 0f);
+            if (wind == null) wind = LoopSound("M5_Gust");
         }
 
         protected override IEnumerator Reveal()
@@ -70,6 +73,7 @@ namespace ARMurals
         {
             float dt = Mathf.Min(Time.deltaTime, 0.05f);
             gust = Mathf.MoveTowards(gust, 0f, dt * 1.5f);
+            SetLoop(wind, Mathf.Clamp01(Mathf.Abs(gust) / 1.5f) * 0.7f * alive);
             float breeze = Mathf.Sin(Time.time * 0.9f) * 0.3f + Mathf.Sin(Time.time * 2.3f) * 0.1f;
 
             // Earrings: a damped pendulum each, pushed by the breeze and the gust.
@@ -95,6 +99,12 @@ namespace ARMurals
             if (glint != null)
             {
                 float p = Mathf.Repeat(Time.time, glintEvery) / 1.2f;      // the sweep takes 1.2 s
+                int sweep = Mathf.FloorToInt(Time.time / glintEvery);
+                if (alive > 0.9f && sweep != lastGlint)
+                {
+                    lastGlint = sweep;
+                    PlaySound("M5_Glint", 0.25f, 1.3f);
+                }
                 var pos = glint.transform.localPosition;
                 pos.y = Mathf.Lerp(glintTopBottom.x, glintTopBottom.y, Mathf.Clamp01(p));
                 glint.transform.localPosition = pos;
@@ -109,6 +119,7 @@ namespace ARMurals
             {
                 if (!Hit(earringColliders[i], ray)) continue;
                 velocity[i] += (velocity[i] >= 0f ? 1f : -1f) * tapKick;
+                PlaySound("M5_Jingle", 0.7f, Random.Range(0.9f, 1.1f));
                 ToggleInfo();
                 return true;
             }
