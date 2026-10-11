@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -40,6 +41,10 @@ namespace ARMurals
         /// so the viewer sees the plain painting. Turning it back on resumes where it was.</summary>
         public static bool EffectsOff;
 
+        readonly Dictionary<string, AudioClip> clips = new Dictionary<string, AudioClip>();
+        readonly List<AudioSource> loops = new List<AudioSource>();
+        AudioSource sounds;
+
         public string MuralSlot => muralSlot;
         public float MuralWidthMeters => muralWidthMeters;
         public bool IsActive { get; private set; }
@@ -57,6 +62,7 @@ namespace ARMurals
             if (IsActive && contentRoot != null && contentRoot.gameObject.activeSelf == EffectsOff)
                 contentRoot.gameObject.SetActive(!EffectsOff);
             if (ambientBed != null) ambientBed.mute = EffectsOff;
+            foreach (var l in loops) l.mute = EffectsOff;
 
             if (!debugKeys) return;
             var kb = Keyboard.current;
@@ -81,6 +87,7 @@ namespace ARMurals
             IsActive = false;
             Play(sfxLost);
             if (ambientBed != null) ambientBed.Pause();
+            Silence();
             HandleTrackingLost();
         }
 
@@ -88,6 +95,7 @@ namespace ARMurals
         {
             IsActive = false;
             if (ambientBed != null) ambientBed.Stop();
+            Silence();
             HandleReset();
         }
 
@@ -110,6 +118,66 @@ namespace ARMurals
         }
 
         protected void PlayConfirm() => Play(sfxConfirm);
+
+        protected void PlaySound(string clipName, float volume = 1f, float pitch = 1f)
+        {
+            var clip = Clip(clipName);
+            if (clip == null || EffectsOff) return;
+            if (sounds == null) sounds = NewSource("Sounds");
+            sounds.pitch = pitch;
+            sounds.PlayOneShot(clip, volume);
+        }
+
+        protected AudioSource LoopSound(string clipName)
+        {
+            var src = NewSource(clipName);
+            src.clip = Clip(clipName);
+            src.loop = true;
+            src.volume = 0f;
+            loops.Add(src);
+            return src;
+        }
+
+        protected static void SetLoop(AudioSource src, float volume, float pitch = 1f)
+        {
+            if (src == null || src.clip == null) return;
+            src.volume = volume;
+            src.pitch = pitch;
+            if (volume > 0.01f && !src.isPlaying) src.Play();
+            else if (volume <= 0.01f && src.isPlaying) src.Pause();
+        }
+
+        protected static void Buzz()
+        {
+#if (UNITY_ANDROID || UNITY_IOS) && !UNITY_EDITOR
+            Handheld.Vibrate();
+#endif
+        }
+
+        protected void Silence()
+        {
+            foreach (var l in loops) SetLoop(l, 0f);
+        }
+
+        AudioClip Clip(string clipName)
+        {
+            if (!clips.TryGetValue(clipName, out var clip))
+            {
+                clip = Resources.Load<AudioClip>("Audio/" + clipName);
+                clips[clipName] = clip;
+            }
+            return clip;
+        }
+
+        AudioSource NewSource(string sourceName)
+        {
+            var go = new GameObject(sourceName);
+            go.transform.SetParent(transform, false);
+            var src = go.AddComponent<AudioSource>();
+            src.playOnAwake = false;
+            src.spatialBlend = 0f;
+            return src;
+        }
 
         static void Play(AudioSource src)
         {
