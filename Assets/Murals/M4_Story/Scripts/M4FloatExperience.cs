@@ -41,6 +41,7 @@ namespace ARMurals
         float out_;               // 0 = on the wall, 1 = floating
         float swing;              // degrees round the figure
         float swingTarget;
+        float lastSwing;
 
         protected override void ResetLayers()
         {
@@ -86,6 +87,7 @@ namespace ARMurals
             {
                 if (!Hit(floaters[i].collider, ray)) continue;
                 spinBoost[i] = 720f;
+                PlaySound("M4_Chime", 0.8f, Random.Range(0.9f, 1.15f));
                 ToggleInfo();
                 return true;
             }
@@ -93,7 +95,13 @@ namespace ARMurals
         }
 
         // INTERACTION 2: swing the pieces round the figure.
-        protected override void Drag(float dx) => swingTarget = Mathf.Clamp(swingTarget + dx * 160f, -maxSwing, maxSwing);
+        protected override void Drag(float dx)
+        {
+            swingTarget = Mathf.Clamp(swingTarget + dx * 160f, -maxSwing, maxSwing);
+            if (Time.time - lastSwing < 0.6f) return;
+            lastSwing = Time.time;
+            PlaySound("M4_Swing", 0.5f);
+        }
 
         /// <summary>sinceReveal: seconds since the reveal began (huge once live).</summary>
         void Place(float sinceReveal)
