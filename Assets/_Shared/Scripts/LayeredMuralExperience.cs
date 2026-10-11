@@ -24,7 +24,7 @@ namespace ARMurals
         [SerializeField] GameObject editorWallPhoto;
         [SerializeField] Renderer dimmer;
         [SerializeField] Color dimTint = new Color(0.04f, 0.05f, 0.08f, 0.7f);
-        [SerializeField] float dimDuration = 0.8f;
+        [SerializeField] float dimDuration = 1f;
 
         [Header("UI")]
         [SerializeField] protected UIShellController ui;

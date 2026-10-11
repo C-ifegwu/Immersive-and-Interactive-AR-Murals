@@ -707,7 +707,7 @@ MonoBehaviour:
   editorWallPhoto: {fileID: 3786409207138286019}
   dimmer: {fileID: 9206018737094663632}
   dimTint: {r: 0.04, g: 0.05, b: 0.08, a: 0.7}
-  dimDuration: 0.8
+  dimDuration: 1
   ui: {fileID: 0}
   infoBody: 'A woman in gold hoops, neck rings and a beaded headband, framed by acacia trees - a portrait of African beauty and adornment painted straight onto the brick. Here the paint itself comes alive: her jewellery moves and the trees catch the wind.'
   earrings:

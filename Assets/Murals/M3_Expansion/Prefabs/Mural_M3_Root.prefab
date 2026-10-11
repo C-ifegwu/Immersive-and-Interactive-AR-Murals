@@ -199,7 +199,7 @@ MonoBehaviour:
   editorWallPhoto: {fileID: 6465850778245903609}
   dimmer: {fileID: 8112118471123199497}
   dimTint: {r: 0.04, g: 0.05, b: 0.08, a: 0.7}
-  dimDuration: 0.8
+  dimDuration: 1
   ui: {fileID: 0}
   infoBody: The dome is the Kigali Convention Centre, which lights up the city at night, painted beside the names of people who shaped Africa's story. The riders are the Tour du Rwanda, the race that brings the whole country out onto its hills.
   bands:

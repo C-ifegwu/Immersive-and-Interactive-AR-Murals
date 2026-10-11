@@ -744,7 +744,7 @@ MonoBehaviour:
   editorWallPhoto: {fileID: 1160982619184107987}
   dimmer: {fileID: 7245864433022673775}
   dimTint: {r: 0.04, g: 0.05, b: 0.08, a: 0.7}
-  dimDuration: 0.8
+  dimDuration: 1
   ui: {fileID: 0}
   infoBody: This giant carved head echoes the colossal stone heads of ancient civilisations, set beside a sphinx-like face and a pyramid. Painted here, it stands for the deep history Africa shares with the world - and for a moment, it looks back at you.
   face: {fileID: 5602545574269845512}

@@ -1349,7 +1349,7 @@ MonoBehaviour:
   editorWallPhoto: {fileID: 7047296776257537402}
   dimmer: {fileID: 186184498874008932}
   dimTint: {r: 0.04, g: 0.05, b: 0.08, a: 0.7}
-  dimDuration: 0.8
+  dimDuration: 1
   ui: {fileID: 0}
   infoBody: 'A giant figure in traditional attire, crowned with rings and wearing gold bangles, painted in bold Afrofuturist colour. Heritage and the future in one body: the ornaments of the past are what lifts it into the air.'
   floaters:
