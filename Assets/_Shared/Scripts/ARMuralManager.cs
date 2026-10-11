@@ -115,6 +115,7 @@ namespace ARMurals
 
         void Bind(ARTrackedImage image)
         {
+            if (string.IsNullOrEmpty(image.referenceImage.name)) return;
             var slot = SlotFor(image);
             if (slot == null)
             {
