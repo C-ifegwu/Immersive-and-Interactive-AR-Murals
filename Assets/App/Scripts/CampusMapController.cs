@@ -82,6 +82,7 @@ namespace ARMurals
             if (cardCloseButton != null) cardCloseButton.onClick.AddListener(() => Select(null));
             if (backToMapButton != null) backToMapButton.onClick.AddListener(BackToMap);
             if (manager != null) manager.MuralDetected += MarkFound;
+            AddBackToScan();
 
             if (splash != null) splash.SetActive(true);
             if (splashStartButton != null) splashStartButton.onClick.AddListener(() => splash.SetActive(false));
@@ -106,6 +107,29 @@ namespace ARMurals
                 if (shell.State == UIShellController.ShellState.Start) Select(null);
                 lastState = shell.State;
             }
+        }
+
+        /// <summary>
+        /// "&lt; SCAN" in the corner of the AR screen: stop the current mural and go back to
+        /// scanning for the next one. A copy of the scanning screen's "&lt; MAP" button, so it
+        /// matches the style without touching the scene.
+        /// </summary>
+        void AddBackToScan()
+        {
+            if (shell == null || backToMapButton == null) return;
+            var arControls = shell.transform.Find("ARControls");
+            if (arControls == null) return;
+
+            var back = Instantiate(backToMapButton, arControls);
+            back.name = "BackToScanButton";
+            back.onClick.RemoveAllListeners();
+            var label = back.GetComponentInChildren<Text>();
+            if (label != null) label.text = "< SCAN";
+            back.onClick.AddListener(() =>
+            {
+                if (manager != null) manager.ResetAll();
+                BeginScan(null);
+            });
         }
 
         void OnDestroy()

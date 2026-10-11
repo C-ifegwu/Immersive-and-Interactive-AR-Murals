@@ -84,7 +84,7 @@ namespace ARMurals
         }
 
         /// <summary>BACK TO START: everything untouched and hidden.</summary>
-        void ResetAll()
+        public void ResetAll()
         {
             foreach (var e in experiences)
             {
@@ -144,6 +144,10 @@ namespace ARMurals
                 return;
             }
 
+            // Scale the content to the size ARCore actually measured, so a mural built for a 5 m
+            // wall fits a 30 cm laptop photo too, and nothing pops out further than it should.
+            FitToImage(exp, image);
+
             if (image.trackingState == TrackingState.Tracking)
             {
                 limitedSince.Remove(image.trackableId);
@@ -166,6 +170,13 @@ namespace ARMurals
                 exp.OnTrackingLost();
                 ReportScanning();
             }
+        }
+
+        static void FitToImage(MuralExperienceBase exp, ARTrackedImage image)
+        {
+            float measured = image.size.x;
+            if (measured <= 0.01f || exp.MuralWidthMeters <= 0.01f) return;
+            exp.transform.localScale = Vector3.one * (measured / exp.MuralWidthMeters);
         }
 
         void ReportScanning()
