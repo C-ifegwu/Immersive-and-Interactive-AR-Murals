@@ -107,6 +107,7 @@ namespace ARMurals
 
         // ---- runtime
         Stage stage = Stage.Untouched;
+        AudioSource drone;
         Coroutine sequence;
         float orbitPhase;
         float spin;
@@ -247,6 +248,7 @@ namespace ARMurals
             if (contentRoot != null) contentRoot.gameObject.SetActive(true);
             if (stage != Stage.Untouched)                  // resume, never restart
             {
+                SetLoop(drone, stage == Stage.Worn ? 0.2f : 0.6f, 0.5f);
                 if (ui != null) ui.ShowExperience();
                 return;
             }
@@ -292,6 +294,8 @@ namespace ARMurals
         IEnumerator BreakAndAssemble()
         {
             stage = Stage.Breaking;
+            if (drone == null) drone = LoopSound("M1_Drone");
+            SetLoop(drone, 0.6f, 0.5f);
 
             // 1. The paint drains out of the wall while the shards fade up in its place.
             for (float t = 0f; t < dimDuration; t += Time.deltaTime)
@@ -306,6 +310,7 @@ namespace ARMurals
 
             if (emergeParticles != null) emergeParticles.Play();
             if (maskLight != null) maskLight.enabled = true;
+            PlaySound("M1_Tear", 0.9f, 0.8f);
 
             // 2. Shard by shard, the flat painting becomes a carved mask hovering off the wall.
             float total = assembleDuration + shardStagger * shards.Count;
@@ -346,6 +351,7 @@ namespace ARMurals
         IEnumerator OpenMask()
         {
             stage = Stage.Opened;
+            PlaySound("M1_Split", 1f, 0.7f);
             if (figureRoot != null) figureRoot.gameObject.SetActive(true);
             foreach (var c in figureColliders) if (c != null) c.enabled = true;
 
@@ -369,6 +375,7 @@ namespace ARMurals
 
         IEnumerator CloseMask()
         {
+            PlaySound("M1_Snap", 0.6f, 1.1f);
             foreach (var c in figureColliders) if (c != null) c.enabled = false;
             for (float t = 0f; t < openDuration * 0.7f; t += Time.deltaTime)
             {
@@ -561,6 +568,8 @@ namespace ARMurals
         {
             stage = Stage.Worn;
             selected = -1;
+            PlaySound("M1_Snap", 1f);
+            Buzz();
             foreach (var c in figureColliders) if (c != null) c.enabled = false;
             LightWall(-1);
             if (emergeParticles != null) emergeParticles.Play();
@@ -613,6 +622,7 @@ namespace ARMurals
             if (figureRoot != null) figureRoot.gameObject.SetActive(false);
             SetAlpha(shardRenderers, wornAlpha);
             if (maskLight != null) maskLight.intensity = 1.0f;
+            SetLoop(drone, 0.2f, 0.45f);
 
             if (ui != null)
             {
