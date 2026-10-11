@@ -17,25 +17,25 @@ MonoBehaviour:
   levelMaps: []
   murals:
   - slot: M1
-    title: The Stone Head
+    title: The Mask Remembers
     level: 1
-    location: Location to be confirmed
-    blurb: A giant carved head that wakes up, blinks and watches you.
+    location: Enterprise commons
+    blurb: Five people wore this mask. Tap it to meet them, and find out who is next in line.
     mapPosition: {x: 0.18, y: 0.52}
     photo: {fileID: 2800000, guid: 56473656772741a4da0e5ba246405c60, type: 3}
     widthMeters: 3
   - slot: M2
-    title: The Caravan
+    title: The Caravan Moves On
     level: 1
-    location: Location to be confirmed
+    location: Ground floor, South Atrium Gallery
     blurb: A camel caravan that walks on across the desert.
     mapPosition: {x: 0.48, y: 0.61}
     photo: {fileID: 2800000, guid: 46ec10abc9f41d247af11727fffa5db6, type: 3}
     widthMeters: 3
   - slot: M3
-    title: Convention Centre
+    title: Convention Centre Lights Up
     level: 2
-    location: Location to be confirmed
+    location: Innovation Wing corridor
     blurb: Kigali's dome lights up as the Tour du Rwanda rides past.
     mapPosition: {x: 0.72, y: 0.6}
     photo: {fileID: 2800000, guid: 9c89b73068077544899c9137bb2cb59b, type: 3}
@@ -43,7 +43,7 @@ MonoBehaviour:
   - slot: M4
     title: The Floating Figure
     level: 2
-    location: Location to be confirmed
+    location: Leadership Centre
     blurb: Gold bangles and cubes float out of the painting around you.
     mapPosition: {x: 0.25, y: 0.28}
     photo: {fileID: 2800000, guid: 1082b7aa0ed921047a3219a7e93c0b5a, type: 3}
@@ -51,7 +51,7 @@ MonoBehaviour:
   - slot: M5
     title: Living Paint
     level: 3
-    location: Location to be confirmed
+    location: Leadership Centre entrance
     blurb: Her gold earrings swing and the acacia trees sway in the wind.
     mapPosition: {x: 0.65, y: 0.22}
     photo: {fileID: 2800000, guid: f307d2ddfd2486d4a9713777e9963a3f, type: 3}
