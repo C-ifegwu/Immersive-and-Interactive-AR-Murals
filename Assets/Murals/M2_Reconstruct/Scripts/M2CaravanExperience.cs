@@ -33,16 +33,22 @@ namespace ARMurals
         [SerializeField] ParticleSystem sand;
         [SerializeField] float lift = 0.04f;
         [SerializeField] float maxWind = 4f;
+        [SerializeField] int leadWalker;
+        [SerializeField] float kneelDepth = 0.18f;
 
         float[] travelled = new float[0];
         bool resting;
         float wind;
         float nextBell;
+        float kneel;
+        Vector3 leadScale;
         AudioSource storm;
 
         protected override void ResetLayers()
         {
             travelled = new float[walkers.Length];
+            if (leadScale == Vector3.zero && Lead() != null) leadScale = Lead().transform.localScale;
+            kneel = 0f;
             for (int i = 0; i < walkers.Length; i++) Place(i, 0f, 1f, 0f);
             if (sand != null) sand.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
             if (caravanCollider != null) caravanCollider.enabled = false;
@@ -66,6 +72,7 @@ namespace ARMurals
         protected override void Live()
         {
             wind = Mathf.MoveTowards(wind, 0f, Time.deltaTime * 1.2f);
+            kneel = Mathf.MoveTowards(kneel, resting ? 1f : 0f, Time.deltaTime * 1.5f);
             float pace = resting ? 0f : 1f + wind;
 
             for (int i = 0; i < walkers.Length; i++)
@@ -118,6 +125,17 @@ namespace ARMurals
             float step = Mathf.Abs(Mathf.Sin(travelled.Length > i ? travelled[i] * 60f : 0f)) * w.stepHeight * lifted;
             w.renderer.transform.localPosition = w.restPos + new Vector3(x, step, -lift * lifted);
             SetColor(w.renderer, Color.white, alpha);
+            if (i == leadWalker) Kneel(w.renderer.transform);
         }
+
+        void Kneel(Transform t)
+        {
+            if (leadScale == Vector3.zero) return;
+            float k = Ease(kneel);
+            t.localScale = new Vector3(leadScale.x, leadScale.y * (1f - kneelDepth * k), leadScale.z);
+            t.localPosition += Vector3.down * leadScale.y * kneelDepth * 0.5f * k;
+        }
+
+        Renderer Lead() => leadWalker < walkers.Length ? walkers[leadWalker].renderer : null;
     }
 }
