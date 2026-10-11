@@ -477,7 +477,7 @@ MonoBehaviour:
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 10
-    m_MaxSize: 40
+    m_MaxSize: 48
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -887,6 +887,7 @@ MonoBehaviour:
   finishButton: {fileID: 1980916094}
   restartButton: {fileID: 714949318}
   infoBody: {fileID: 1544949447}
+  infoTitle: {fileID: 0}
 --- !u!224 &153853562
 RectTransform:
   m_ObjectHideFlags: 0
@@ -926,7 +927,7 @@ MonoBehaviour:
   shell: {fileID: 153853561}
   directory: {fileID: 11400000, guid: 8140ba398adff904b8ae03ea06f0791e, type: 2}
   experiences:
-  - {fileID: 1644800667}
+  - {fileID: 1354854915}
   - {fileID: 1832777633}
   - {fileID: 951687323}
   - {fileID: 1944693013}
@@ -964,6 +965,8 @@ MonoBehaviour:
   tabOff: {r: 1, g: 1, b: 1, a: 0}
   tabTextOn: {r: 0.063, g: 0.071, b: 0.11, a: 1}
   tabTextOff: {r: 0.949, g: 0.945, b: 0.925, a: 1}
+  endingText: The campus has changed. The mask waits for its next wearer, the camels keep walking, and the brass earrings hang still until the next gust of wind.
+  waitingText: More murals are waiting on campus. Head back to the map and pick the next one.
 --- !u!114 &153853564
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1828,7 +1831,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ARMurals.ARMuralManager
   experiences:
-  - {fileID: 1644800667}
+  - {fileID: 1354854915}
   - {fileID: 1832777633}
   - {fileID: 951687323}
   - {fileID: 1944693013}
@@ -1995,7 +1998,7 @@ MonoBehaviour:
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 10
-    m_MaxSize: 40
+    m_MaxSize: 44
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -2352,7 +2355,7 @@ MonoBehaviour:
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 10
-    m_MaxSize: 40
+    m_MaxSize: 44
     m_Alignment: 3
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -2827,7 +2830,7 @@ MonoBehaviour:
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 10
-    m_MaxSize: 40
+    m_MaxSize: 60
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -3475,7 +3478,7 @@ MonoBehaviour:
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 10
-    m_MaxSize: 40
+    m_MaxSize: 150
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -3556,7 +3559,7 @@ MonoBehaviour:
     m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 10
-    m_MaxSize: 40
+    m_MaxSize: 62
     m_Alignment: 3
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -5474,7 +5477,7 @@ MonoBehaviour:
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 10
-    m_MaxSize: 40
+    m_MaxSize: 42
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -5581,6 +5584,78 @@ MonoBehaviour:
   m_VerticalAxis: Vertical
   m_SubmitButton: Submit
   m_CancelButton: Cancel
+--- !u!1001 &1354854914
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3714534285257444045, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
+      propertyPath: ui
+      value: 
+      objectReference: {fileID: 153853561}
+    - target: {fileID: 5912227699415573287, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
+      propertyPath: m_Name
+      value: Mural_M1_Root
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
+--- !u!114 &1354854915 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3714534285257444045, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
+  m_PrefabInstance: {fileID: 1354854914}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5f7343b33c146634f9e8cd1c68232560, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ARMurals.M1EmergenceExperience
 --- !u!1 &1359638302
 GameObject:
   m_ObjectHideFlags: 0
@@ -6464,78 +6539,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 20}
   m_SizeDelta: {x: 800, y: 460}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!1001 &1644800666
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 1869020712172981546, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
-      propertyPath: ui
-      value: 
-      objectReference: {fileID: 153853561}
-    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3227229947985620114, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5912227699415573287, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
-      propertyPath: m_Name
-      value: Mural_M1_Root
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
---- !u!114 &1644800667 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 1869020712172981546, guid: becd3799a0826aa4aa8567e414130f7c, type: 3}
-  m_PrefabInstance: {fileID: 1644800666}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9fdd29c0e31e0f349aff89412192d434, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ARMurals.M1BlinkExperience
 --- !u!1 &1680693609
 GameObject:
   m_ObjectHideFlags: 0
@@ -7109,7 +7112,7 @@ MonoBehaviour:
     m_FontStyle: 0
     m_BestFit: 0
     m_MinSize: 10
-    m_MaxSize: 40
+    m_MaxSize: 72
     m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
@@ -8918,7 +8921,7 @@ SceneRoots:
   - {fileID: 1323550134}
   - {fileID: 331264285}
   - {fileID: 153853562}
-  - {fileID: 1644800666}
+  - {fileID: 1354854914}
   - {fileID: 1832777632}
   - {fileID: 951687322}
   - {fileID: 1944693012}
