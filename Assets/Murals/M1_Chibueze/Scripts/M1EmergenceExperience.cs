@@ -68,6 +68,7 @@ namespace ARMurals
         [Tooltip("How transparent the mask goes once it turns to you. Low, so the camera " +
                  "feed reads through the silhouette and the mask is visibly empty.")]
         [SerializeField, Range(0f, 0.6f)] float wornAlpha = 0.12f;
+        [SerializeField] float faceDistance = 0.45f;
         [SerializeField] float wearDuration = 1.6f;
         [SerializeField, TextArea(4, 12)]
         string wornInfo =
@@ -587,6 +588,12 @@ namespace ARMurals
             }
             var startPos = maskRoot != null ? maskRoot.localPosition : Vector3.zero;
             var endPos = startPos + Normal * 0.12f;   // a small step towards whoever is looking
+            if (cam != null)
+            {
+                var camLocal = transform.InverseTransformPoint(cam.transform.position);
+                var toCam = camLocal - startPos;
+                if (toCam.magnitude > faceDistance) endPos = camLocal - toCam.normalized * faceDistance;
+            }
 
             for (float t = 0f; t < wearDuration; t += Time.deltaTime)
             {
